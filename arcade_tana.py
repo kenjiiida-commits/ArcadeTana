@@ -23,7 +23,8 @@ from pathlib import Path
 
 from PySide6.QtCore import (
     QAbstractTableModel, QByteArray, QModelIndex, QObject, QProcess, QSortFilterProxyModel,
-    QStandardPaths, Qt, QThread, QTimer, QUrl, Signal,
+    QLibraryInfo, QLocale, QProcessEnvironment, QStandardPaths, Qt, QThread, QTimer,
+    QTranslator, QUrl, Signal,
 )
 from PySide6.QtGui import QAction, QDesktopServices, QIcon, QKeySequence, QPixmap
 from PySide6.QtWidgets import (
@@ -33,9 +34,13 @@ from PySide6.QtWidgets import (
     QMessageBox, QPushButton, QSizePolicy, QSplitter, QTableView, QVBoxLayout, QWidget,
 )
 
+# 起動したときの環境変数を覚えておく。
+# ゲームパッド用に pygame へ渡す設定（SDL_VIDEODRIVER=dummy など）を MAME に引き継がないため。
+ORIGINAL_ENV = dict(os.environ)
+
 APP_NAME = "アーケード棚"
 APP_ID = "arcade-tana"
-VERSION = "0.8.0"
+VERSION = "0.8.1"
 
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / APP_ID
 CACHE_DIR = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / APP_ID
@@ -1526,6 +1531,10 @@ class MainWindow(QMainWindow):
         proc = QProcess(self)
         proc.setProgram(self.cfg["mame_path"])
         proc.setArguments(args)
+        env = QProcessEnvironment()
+        for k, v in ORIGINAL_ENV.items():
+            env.insert(k, v)
+        proc.setProcessEnvironment(env)       # pygame 用の設定を MAME に渡さない
         proc.setProperty("rec_file", rec_file or "")
         proc.setProcessChannelMode(QProcess.MergedChannels)
         proc.finished.connect(lambda code, _st, p=proc, n=name: self.on_finished(p, n, code))
@@ -1761,6 +1770,10 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
     app.setDesktopFileName(APP_ID)
+    # 「Show Details...」などの Qt 標準のボタンも日本語にする（翻訳ファイルがあれば）
+    tr = QTranslator(app)
+    if tr.load(QLocale("ja_JP"), "qtbase", "_", QLibraryInfo.path(QLibraryInfo.TranslationsPath)):
+        app.installTranslator(tr)
     icon = QIcon.fromTheme(APP_ID)
     if icon.isNull():
         icon = QIcon(str(Path(__file__).resolve().parent / f"{APP_ID}.svg"))
