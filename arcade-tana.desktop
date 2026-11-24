@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=アーケード棚
+Name[en]=Arcade Tana
+GenericName=MAME ランチャー
+Comment=MAME を日本語で使いやすくするランチャー
+Comment[en]=Japanese-friendly launcher for MAME
+Exec=arcade-tana
+Icon=arcade-tana
+Terminal=false
+Categories=Game;Emulator;
+Keywords=MAME;arcade;アーケード;エミュレータ;
+StartupWMClass=arcade-tana

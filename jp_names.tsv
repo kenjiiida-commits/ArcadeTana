@@ -1,0 +1,313 @@
+# アーケード棚 同梱の日本語名リスト
+# セット名<TAB>日本語名<TAB>読み（漢字で始まる名前だけ。あいうえお順の並べ替えに使う）
+# 別バージョン（クローン）は、ここに無くても元のゲームの日本語名が自動で使われます。
+# 自分で付けた名前（F2）はこのリストより優先されます。
+#
+# ── ナムコ ──
+puckman	パックマン
+pacman	パックマン（ミッドウェイ版）
+mspacman	ミズ・パックマン
+superpac	スーパーパックマン
+pacnpal	パック&パル
+pacland	パックランド
+pacmania	パックマニア
+galaxian	ギャラクシアン
+galaga	ギャラガ
+galaga88	ギャラガ'88
+gaplus	ギャプラス
+xevious	ゼビウス
+digdug	ディグダグ
+digdug2	ディグダグII
+mappy	マッピー
+hopmappy	ホッピングマッピー
+rallyx	ラリーX
+bosco	ボスコニアン
+polepos	ポールポジション
+polepos2	ポールポジションII
+druaga	ドルアーガの塔
+grobda	グロブダー
+motos	モトス
+phozon	フォゾン
+liblrabl	リブルラブル
+toypop	トイポップ
+skykid	スカイキッド
+baraduke	バラデューク
+rthunder	ローリングサンダー
+genpeitd	源平討魔伝	げんぺいとうまでん
+splatter	スプラッターハウス
+dspirit	ドラゴンスピリット
+valkyrie	ワルキューレの伝説
+wndrmomo	ワンダーモモ
+marvland	マーベルランド
+quester	クエスター
+starblad	スターブレード
+#
+# ── カプコン ──
+1942	1942
+1943	1943 ミッドウェイ海戦
+1943kai	1943改
+1941	1941
+1944	1944 THE LOOP MASTER
+19xx	19XX THE WAR AGAINST DESTINY
+vulgus	バルガス
+sonson	ソンソン
+exedexes	エグゼドエグゼス
+commando	戦場の狼	せんじょうのおおかみ
+mercs	戦場の狼II	せんじょうのおおかみ2
+gng	魔界村	まかいむら
+ghouls	大魔界村	だいまかいむら
+sectionz	セクションZ
+trojan	闘いの挽歌	たたかいのばんか
+lwings	アレスの翼
+blktiger	ブラックドラゴン
+sidearms	サイドアーム
+tigeroad	虎への道	とらへのみち
+lastduel	ラストデュエル
+forgottn	ロストワールド
+sf	ストリートファイター
+sf2	ストリートファイターII
+sf2ce	ストリートファイターII ダッシュ
+sf2hf	ストリートファイターII ダッシュターボ
+ssf2	スーパーストリートファイターII
+ssf2t	スーパーストリートファイターII X
+sfa	ストリートファイターZERO
+sfa2	ストリートファイターZERO2
+sfa3	ストリートファイターZERO3
+sfiii	ストリートファイターIII
+sfiii2	ストリートファイターIII 2nd IMPACT
+sfiii3	ストリートファイターIII 3rd STRIKE
+ffight	ファイナルファイト
+strider	ストライダー飛竜
+willow	ウィロー
+msword	マジックソード
+nemo	ニモ
+captcomm	キャプテンコマンドー
+knights	ナイツ オブ ザ ラウンド
+varth	ヴァース
+dino	キャディラックス 恐竜新世紀
+punisher	パニッシャー
+avsp	エイリアンVSプレデター
+ddtod	ダンジョンズ&ドラゴンズ タワー オブ ドゥーム
+ddsom	ダンジョンズ&ドラゴンズ シャドー オーバー ミスタラ
+armwar	アーマードウォーリアーズ
+dstlk	ヴァンパイア
+nwarr	ヴァンパイアハンター
+vsav	ヴァンパイアセイヴァー
+xmcota	エックスメン チルドレン オブ ジ アトム
+msh	マーヴル・スーパーヒーローズ
+xmvsf	エックスメン VS. ストリートファイター
+mshvsf	マーヴル・スーパーヒーローズ VS. ストリートファイター
+mvsc	マーヴル VS. カプコン
+spf2t	スーパーパズルファイターIIX
+cybots	サイバーボッツ
+ecofghtr	エコファイターズ
+gigawing	ギガウィング
+progear	プロギアの嵐
+#
+# ── コナミ ──
+scramble	スクランブル
+frogger	フロッガー
+pooyan	プーヤン
+timeplt	タイムパイロット
+gyruss	ジャイラス
+trackfld	ハイパーオリンピック（海外版）
+hyprolym	ハイパーオリンピック
+yiear	イー・アル・カンフー
+circusc	サーカスチャーリー
+gberet	グリーンベレー
+nemesis	グラディウス（海外版）
+gradius	グラディウス
+vulcan	グラディウスII（海外版）
+gradius2	グラディウスII
+gradius3	グラディウスIII
+salamand	沙羅曼蛇	さらまんだ
+twinbee	ツインビー
+parodius	パロディウスだ!
+xexex	XEXEX
+contra	魂斗羅（海外版）	こんとら（かいがいばん）
+gryzor	魂斗羅（欧州版）	こんとら（おうしゅうばん）
+#
+# ── セガ ──
+pengo	ペンゴ
+zaxxon	ザクソン
+congo	コンゴボンゴ
+flicky	フリッキー
+choplift	チョップリフター
+wboy	ワンダーボーイ
+hangon	ハングオン
+sharrier	スペースハリアー
+outrun	アウトラン
+aburner2	アフターバーナーII
+pdrift	パワードリフト
+fantzone	ファンタジーゾーン
+aliensyn	エイリアンシンドローム
+shinobi	忍	しのび
+altbeast	獣王記	じゅうおうき
+goldnaxe	ゴールデンアックス
+tetris	テトリス（セガ）
+columns	コラムス
+bloxeed	ブロクシード
+puyo	ぷよぷよ
+puyopuy2	ぷよぷよ通
+#
+# ── タイトー ──
+invaders	スペースインベーダー
+qix	クイックス
+elevator	エレベーターアクション
+halleys	ハレーズコメット
+lkage	影の伝説	かげのでんせつ
+bublbobl	バブルボブル
+rbisland	レインボーアイランド
+tnzs	ニュージーランドストーリー
+arkanoid	アルカノイド
+darius	ダライアス
+darius2	ダライアスII
+dariusg	ダライアス外伝
+ninjaw	ニンジャウォーリアーズ
+rastan	ラスタンサーガ
+chasehq	チェイスH.Q.
+opwolf	オペレーションウルフ
+kikikai	奇々怪界	ききかいかい
+syvalion	サイバリオン
+cadash	カダッシュ
+growl	ルナーク
+metalb	メタルブラック
+gunlock	レイフォース（海外版）
+rayforcej	レイフォース
+pbobble	パズルボブル
+pbobble2	パズルボブル2
+bubblem	バブルメモリーズ
+#
+# ── 任天堂 ──
+dkong	ドンキーコング
+dkongjr	ドンキーコングJR.
+dkong3	ドンキーコング3
+mario	マリオブラザーズ
+popeye	ポパイ
+punchout	パンチアウト!!
+spnchout	スーパーパンチアウト!!
+#
+# ── アイレム ──
+mpatrol	ムーンパトロール
+kungfum	スパルタンX
+ldrun	ロードランナー
+rtype	R-TYPE
+rtype2	R-TYPE II
+imgfight	イメージファイト
+xmultipl	エックスマルチプライ
+nspirit	最後の忍道	さいごのにんどう
+rtypeleo	R-TYPE LEO
+#
+# ── テクモ（テーカン） ──
+bombjack	ボンジャック
+starforc	スターフォース
+solomon	ソロモンの鍵
+rygar	アルゴスの戦士
+gemini	ジェミニウイング
+silkworm	シルクワーム
+gaiden	忍者龍剣伝	にんじゃりゅうけんでん
+#
+# ── データイースト ──
+btime	バーガータイム
+karnov	カルノフ
+chelnov	チェルノブ
+hbarrel	ヘビーバレル
+robocop	ロボコップ
+#
+# ── テクノスジャパン ──
+renegade	熱血硬派くにおくん（海外版）	ねっけつこうはくにおくん（かいがいばん）
+kuniokun	熱血硬派くにおくん	ねっけつこうはくにおくん
+ddragon	ダブルドラゴン
+ddragon2	ダブルドラゴンII
+#
+# ── SNK・ネオジオ ──
+ikari	怒	いかり
+aso	ASO
+mslug	メタルスラッグ
+mslug2	メタルスラッグ2
+mslugx	メタルスラッグX
+mslug3	メタルスラッグ3
+mslug4	メタルスラッグ4
+mslug5	メタルスラッグ5
+kof94	ザ・キング・オブ・ファイターズ'94
+kof95	ザ・キング・オブ・ファイターズ'95
+kof96	ザ・キング・オブ・ファイターズ'96
+kof97	ザ・キング・オブ・ファイターズ'97
+kof98	ザ・キング・オブ・ファイターズ'98
+kof99	ザ・キング・オブ・ファイターズ'99
+kof2000	ザ・キング・オブ・ファイターズ2000
+kof2001	ザ・キング・オブ・ファイターズ2001
+kof2002	ザ・キング・オブ・ファイターズ2002
+fatfury1	餓狼伝説	がろうでんせつ
+fatfury2	餓狼伝説2	がろうでんせつ2
+fatfursp	餓狼伝説スペシャル	がろうでんせつすぺしゃる
+rbff1	リアルバウト餓狼伝説
+garou	餓狼 MARK OF THE WOLVES	がろう MARK OF THE WOLVES
+samsho	サムライスピリッツ
+samsho2	真サムライスピリッツ 覇王丸地獄変	しんさむらいすぴりっつ はおうまるじごくへん
+lastblad	幕末浪漫 月華の剣士	ばくまつろまん げっかのけんし
+aof	龍虎の拳	りゅうこのけん
+aof2	龍虎の拳2	りゅうこのけん2
+kotm	キング・オブ・ザ・モンスターズ
+nam1975	NAM-1975
+sengoku	戦国伝承	せんごくでんしょう
+viewpoin	ビューポイント
+pulstar	パルスター
+blazstar	ブレイジングスター
+sonicwi2	ソニックウィングス2
+neobombe	ネオボンバーマン
+wakuwak7	ワクワク7
+pbobblen	パズルボブル（ネオジオ版）
+#
+# ── 東亜プラン ──
+tigerh	タイガーヘリ
+twincobr	究極タイガー	きゅうきょくたいがー
+hellfire	ヘルファイアー
+zerowing	ゼロウイング
+fireshrk	鮫!鮫!鮫!（海外版）	さめさめさめ（かいがいばん）
+samesame	鮫!鮫!鮫!	さめさめさめ
+outzone	アウトゾーン
+truxton	達人（海外版）	たつじん（かいがいばん）
+tatsujin	達人	たつじん
+truxton2	達人王	たつじんおう
+snowbros	スノーブラザーズ
+dogyuun	ドギューン!!
+batsugun	バツグン
+#
+# ── ケイブ・彩京・ほか ──
+donpachi	首領蜂	どんぱち
+ddonpach	怒首領蜂	どどんぱち
+ddpdoj	怒首領蜂 大往生	どどんぱち だいおうじょう
+esprade	エスプレイド
+guwange	ぐわんげ
+espgal	エスプガルーダ
+ket	ケツイ 〜絆地獄たち〜
+mushisam	虫姫さま	むしひめさま
+gunbird	ガンバード
+sngkace	戦国エース	せんごくえーす
+s1945	ストライカーズ1945
+raiden	雷電	らいでん
+viprp1	バイパーフェイズ1
+aerofgt	ソニックウィングス
+exerion	エクセリオン
+formatz	フォーメーションZ
+psychic5	サイキック5
+terracre	テラクレスタ
+cclimber	クレイジークライマー
+mrdo	ミスタードゥ
+ladybug	レディバグ
+phoenix	フェニックス
+#
+# ── アタリ・ウィリアムス・ほか海外 ──
+asteroid	アステロイド
+missile	ミサイルコマンド
+centiped	センチピード
+tempest	テンペスト
+atetris	テトリス（アタリ）
+gauntlet	ガントレット
+paperboy	ペーパーボーイ
+marble	マーブルマッドネス
+defender	ディフェンダー
+robotron	ロボトロン2084
+joust	ジャウスト
+qbert	Q*bert
