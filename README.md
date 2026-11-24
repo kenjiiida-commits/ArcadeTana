@@ -18,6 +18,7 @@ MAME 本体には手を加えず、外から `mame` コマンドを呼び出し�
 - お気に入り、遊んだ回数、最後に遊んだ日
 - 起動に失敗したとき、原因を日本語で説明
 - **ゲームパッドで操作**（pygame が必要）。F11 で全画面表示
+- **録画**：「● 録画する」をオンにして遊ぶと、終了後に自動で MP4 に変換して「ビデオ/アーケード棚」に保存（ffmpeg が必要）
 
 ## インストール（Ubuntu 25.04 以降）
 [Releases](https://github.com/kenjiiida-commits/ArcadeTana/releases) から `arcade-tana_<版>_all.deb` をダウンロードして：
@@ -25,11 +26,11 @@ MAME 本体には手を加えず、外から `mame` コマンドを呼び出し�
 sudo apt install mame
 sudo apt install ./arcade-tana_0.7.0_all.deb
 ```
-PySide6・pygame は Ubuntu 公式パッケージが自動で入ります。アプリ一覧の「アーケード棚」から起動します。
+PySide6・pygame・ffmpeg は Ubuntu 公式パッケージが自動で入ります。アプリ一覧の「アーケード棚」から起動します。
 
 ### DEB を使わない場合
 ```
-sudo apt install mame python3-pyside6.qtwidgets python3-pygame
+sudo apt install mame python3-pyside6.qtwidgets python3-pygame ffmpeg
 python3 arcade_tana.py      # そのまま起動
 ./install.sh                # このユーザーだけにインストール
 ```
@@ -56,6 +57,14 @@ python3 arcade_tana.py      # そのまま起動
 | B | 検索をクリア |
 
 ゲーム中は、アーケード棚はパッドに反応しません。
+
+## 録画
+1. 上の「● 録画する」をオンにする（Ctrl+R。ゲームパッドで遊ぶときも有効）
+2. いつもどおり遊んで、Esc でゲームを終える
+3. 自動で MP4 に変換され、「ビデオ/アーケード棚」に `ゲーム名_日時.mp4` で保存される
+
+- 録画中は MAME が無圧縮の AVI を書くので、**1 分で数百 MB** の空きが必要です（変換後は数 MB 程度）
+- 4:3（縦画面は 3:4）に整え、ドットをぼかさずに拡大します。保存先・画質は「設定」で変えられます
 
 ## 日本語名リスト
 同梱の `jp_names.tsv` は「セット名<TAB>日本語名<TAB>読み」の形式です（読みは漢字で始まる名前だけ）。

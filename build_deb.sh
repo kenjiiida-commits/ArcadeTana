@@ -29,14 +29,14 @@ Section: games
 Priority: optional
 Architecture: all
 Depends: python3 (>= 3.10), python3-pyside6.qtcore, python3-pyside6.qtgui, python3-pyside6.qtwidgets
-Recommends: mame, python3-pygame
+Recommends: mame, python3-pygame, ffmpeg
 Installed-Size: $SIZE
 Maintainer: 飯田顕治 <kenjiiida-commits@users.noreply.github.com>
 Homepage: https://github.com/kenjiiida-commits/ArcadeTana
 Description: Japanese-friendly launcher for MAME (アーケード棚)
  アーケード棚は、MAME を日本語で使いやすくするランチャーです。
  持っている ROM の一覧表示、日本語名での表示・検索、日本版／海外版の
- 切り替え、ゲーム画面の画像表示、ゲームパッド操作に対応しています。
+ 切り替え、ゲーム画面の画像表示、ゲームパッド操作、録画に対応しています。
  MAME 本体は含みません（mame パッケージを別に入れてください）。
 CTRL
 

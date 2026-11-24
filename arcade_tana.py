@@ -23,7 +23,7 @@ from pathlib import Path
 
 from PySide6.QtCore import (
     QAbstractTableModel, QByteArray, QModelIndex, QObject, QProcess, QSortFilterProxyModel,
-    Qt, QThread, QTimer, QUrl, Signal,
+    QStandardPaths, Qt, QThread, QTimer, QUrl, Signal,
 )
 from PySide6.QtGui import QAction, QDesktopServices, QIcon, QKeySequence, QPixmap
 from PySide6.QtWidgets import (
@@ -35,7 +35,7 @@ from PySide6.QtWidgets import (
 
 APP_NAME = "アーケード棚"
 APP_ID = "arcade-tana"
-VERSION = "0.7.0"
+VERSION = "0.8.0"
 
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / APP_ID
 CACHE_DIR = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / APP_ID
@@ -94,6 +94,11 @@ DEFAULT_CONFIG = {
     "skip_gameinfo": True,      # 起動時の英語の注意画面を飛ばす
     "extra_args": "",
     "gamepad": True,            # ゲームパッドで操作する
+    "record": False,            # 録画しながら遊ぶ
+    "record_dir": "",           # 録画の保存先（空なら「ビデオ/アーケード棚」）
+    "record_crf": 20,           # 画質（小さいほど高画質・大きなファイル）
+    "record_43": True,          # 4:3（縦画面は 3:4）に整えて拡大する
+    "record_keep_avi": False,   # 変換前の AVI を残す
     "favorites": [],
     "jp_names": {},             # セット名 → 日本語名
     "jp_yomi": {},              # セット名 → 読み（並べ替え用）
@@ -390,6 +395,145 @@ def expand_owned(found: dict[str, Path], info: dict) -> set[str]:
         if all(c in zip_crcs[path] for c in crcs):
             owned.add(name)
     return owned
+
+
+# ─────────────────────────────────────────────
+# 録画（MAME が書き出した AVI を ffmpeg で MP4 に変換する）
+# ─────────────────────────────────────────────
+
+def default_record_dir() -> str:
+    base = QStandardPaths.writableLocation(QStandardPaths.MoviesLocation) or str(Path.home() / "Videos")
+    return str(Path(base) / APP_NAME)
+
+
+def safe_filename(text: str) -> str:
+    return re.sub(r'[\\/:*?"<>|\n\r\t]', "_", text).strip() or "game"
+
+
+def unique_path(path: Path) -> Path:
+    if not path.exists():
+        return path
+    for i in range(2, 1000):
+        cand = path.with_name(f"{path.stem}_{i}{path.suffix}")
+        if not cand.exists():
+            return cand
+    return path
+
+
+class Recorder(QObject):
+    """AVI → MP4 の変換を1本ずつ順番に行う。"""
+    progress = Signal(str)
+    done = Signal(str)            # 保存した MP4（または AVI）の場所
+    failed = Signal(str)
+
+    def __init__(self, cfg: dict, parent=None):
+        super().__init__(parent)
+        self.cfg = cfg
+        self.queue: list[tuple[Path, Path]] = []
+        self.proc: QProcess | None = None
+        self.current: tuple[Path, Path] | None = None
+        self.duration = 0.0
+
+    def busy(self) -> bool:
+        return self.proc is not None or bool(self.queue)
+
+    def add(self, avi: Path, mp4: Path):
+        self.queue.append((avi, mp4))
+        if self.proc is None:
+            self.start_next()
+
+    def start_next(self):
+        if not self.queue:
+            return
+        avi, mp4 = self.queue.pop(0)
+        mp4.parent.mkdir(parents=True, exist_ok=True)
+        if not shutil.which("ffmpeg"):
+            dest = unique_path(mp4.with_suffix(".avi"))
+            try:
+                shutil.move(str(avi), dest)
+                self.failed.emit(f"ffmpeg が無いので、MP4 に変換せず AVI のまま保存しました：\n{dest}\n\n"
+                                 "小さな MP4 にしたいときは、端末で\n  sudo apt install ffmpeg\nを実行してください。")
+            except OSError as e:
+                self.failed.emit(f"録画ファイルを移動できませんでした：{e}")
+            self.start_next()
+            return
+        self.current = (avi, mp4)
+        self.duration = 0.0
+        if shutil.which("ffprobe"):
+            try:
+                out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                                      "-of", "csv=p=0", str(avi)], capture_output=True, text=True,
+                                     timeout=20).stdout.strip()
+                self.duration = float(out or 0)
+            except (ValueError, subprocess.SubprocessError, OSError):
+                pass
+        if self.cfg.get("record_43", True):
+            # 横画面 → 1280x960、縦画面 → 720x960。ドットはぼかさずに拡大
+            vf = "scale='if(gte(iw,ih),1280,720)':960:flags=neighbor,setsar=1"
+        else:
+            vf = "scale=trunc(iw*3/2)*2:trunc(ih*3/2)*2:flags=neighbor,setsar=1"
+        part = mp4.with_name(mp4.name + ".part")
+        self.proc = QProcess(self)
+        self.proc.setProgram("ffmpeg")
+        self.proc.setArguments([
+            "-hide_banner", "-nostdin", "-y", "-i", str(avi), "-vf", vf,
+            "-c:v", "libx264", "-preset", "veryfast", "-crf", str(self.cfg.get("record_crf", 20)),
+            "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart",
+            "-progress", "pipe:1", "-nostats", "-f", "mp4", str(part)])
+        self.proc.readyReadStandardOutput.connect(self.on_output)
+        self.proc.finished.connect(lambda code, _st, part=part: self.on_finished(code, part))
+        self.proc.start()
+        self.progress.emit(f"録画を MP4 に変換中：{mp4.name}")
+
+    def on_output(self):
+        text = bytes(self.proc.readAllStandardOutput()).decode(errors="replace")
+        for m in re.finditer(r"out_time_us=(\d+)", text):
+            sec = int(m.group(1)) / 1_000_000
+            name = self.current[1].name if self.current else ""
+            if self.duration > 0:
+                pct = min(99, int(sec / self.duration * 100))
+                self.progress.emit(f"録画を MP4 に変換中… {pct}%　{name}")
+            else:
+                self.progress.emit(f"録画を MP4 に変換中… {int(sec)} 秒分　{name}")
+
+    def on_finished(self, code: int, part: Path):
+        avi, mp4 = self.current
+        err = bytes(self.proc.readAllStandardError()).decode(errors="replace")
+        self.proc.deleteLater()
+        self.proc = None
+        self.current = None
+        if code == 0 and part.exists() and part.stat().st_size > 0:
+            final = unique_path(mp4)
+            part.replace(final)
+            if self.cfg.get("record_keep_avi"):
+                try:
+                    shutil.move(str(avi), unique_path(final.with_suffix(".avi")))
+                except OSError:
+                    pass
+            else:
+                avi.unlink(missing_ok=True)
+            self.done.emit(str(final))
+        else:
+            part.unlink(missing_ok=True)
+            self.failed.emit("MP4 への変換に失敗しました。元の AVI は残してあります：\n"
+                             f"{avi}\n\n{err.strip()[-600:]}")
+        self.start_next()
+
+    def abort_all(self):
+        """終了するとき：変換をやめ、まだの AVI は保存先へ移しておく。"""
+        if self.proc:
+            self.proc.kill()
+            self.proc.waitForFinished(3000)
+            if self.current:
+                self.queue.insert(0, self.current)
+        for avi, mp4 in self.queue:
+            mp4.with_name(mp4.name + ".part").unlink(missing_ok=True)
+            try:
+                mp4.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(avi), unique_path(mp4.with_suffix(".avi")))
+            except OSError:
+                pass
+        self.queue.clear()
 
 
 # ─────────────────────────────────────────────
@@ -735,7 +879,7 @@ class SettingsDialog(QDialog):
     def __init__(self, cfg: dict, parent=None):
         super().__init__(parent)
         self.setWindowTitle("設定")
-        self.resize(600, 560)
+        self.resize(620, 700)
         self.cfg = cfg
 
         form = QFormLayout()
@@ -767,6 +911,26 @@ class SettingsDialog(QDialog):
         self.pad_chk = QCheckBox("ゲームパッドで一覧を操作する（次回起動から反映）")
         self.pad_chk.setChecked(cfg.get("gamepad", True))
         form.addRow("", self.pad_chk)
+
+        self.rec_edit = QLineEdit(cfg.get("record_dir") or default_record_dir())
+        rec_btn = QPushButton("選ぶ…")
+        rec_btn.clicked.connect(lambda: (lambda d: d and self.rec_edit.setText(d))(
+            QFileDialog.getExistingDirectory(self, "録画の保存先を選ぶ", self.rec_edit.text())))
+        rrow = QHBoxLayout()
+        rrow.addWidget(self.rec_edit)
+        rrow.addWidget(rec_btn)
+        form.addRow("録画の保存先：", rrow)
+        self.crf_box = QComboBox()
+        for label, crf in (("高画質（ファイル大きめ）", 16), ("標準", 20), ("小さめ（画質ふつう）", 26)):
+            self.crf_box.addItem(label, crf)
+        self.crf_box.setCurrentIndex(max(0, self.crf_box.findData(cfg.get("record_crf", 20))))
+        form.addRow("録画の画質：", self.crf_box)
+        self.r43_chk = QCheckBox("録画を 4:3（縦画面は 3:4）に整えて大きくする")
+        self.r43_chk.setChecked(cfg.get("record_43", True))
+        self.keep_chk = QCheckBox("変換前の AVI ファイルも残す（とても大きいので通常はオフ）")
+        self.keep_chk.setChecked(cfg.get("record_keep_avi", False))
+        form.addRow("", self.r43_chk)
+        form.addRow("", self.keep_chk)
 
         self.extra_edit = QLineEdit(cfg["extra_args"])
         self.extra_edit.setPlaceholderText("例：-video opengl（分からなければ空のままで OK）")
@@ -817,6 +981,11 @@ class SettingsDialog(QDialog):
         self.cfg["mame_japanese"] = self.jp_chk.isChecked()
         self.cfg["skip_gameinfo"] = self.skip_chk.isChecked()
         self.cfg["gamepad"] = self.pad_chk.isChecked()
+        rd = self.rec_edit.text().strip()
+        self.cfg["record_dir"] = "" if rd == default_record_dir() else rd
+        self.cfg["record_crf"] = self.crf_box.currentData()
+        self.cfg["record_43"] = self.r43_chk.isChecked()
+        self.cfg["record_keep_avi"] = self.keep_chk.isChecked()
         self.cfg["extra_args"] = self.extra_edit.text().strip()
 
 
@@ -900,6 +1069,12 @@ class MainWindow(QMainWindow):
         top.addWidget(QLabel("表示："))
         top.addWidget(self.mode_box)
         top.addWidget(self.search, 1)
+        self.rec_chk = QCheckBox("● 録画する")
+        self.rec_chk.setToolTip("オンにすると、遊んだ内容を録画して MP4 で保存します（Ctrl+R）")
+        self.rec_chk.setChecked(self.cfg.get("record", False))
+        self.rec_chk.toggled.connect(self.on_rec_toggled)
+        self.on_rec_toggled(self.rec_chk.isChecked())
+        top.addWidget(self.rec_chk)
         top.addWidget(self.play_btn)
 
         # 2段目：年代・メーカー・クローン
@@ -992,6 +1167,13 @@ class MainWindow(QMainWindow):
         self.build_menus()
         self.statusBar().showMessage("ゲーム一覧を読み込んでいます…")
 
+        self.rec_label = QLabel("")
+        self.rec_label.setStyleSheet("color: #d32f2f;")
+        self.statusBar().addPermanentWidget(self.rec_label)
+        self.recorder = Recorder(self.cfg, self)
+        self.recorder.progress.connect(self.rec_label.setText)
+        self.recorder.done.connect(self.on_rec_done)
+        self.recorder.failed.connect(self.on_rec_failed)
         self.pad_label = QLabel("")
         self.statusBar().addPermanentWidget(self.pad_label)
         self.pad = None
@@ -1028,6 +1210,7 @@ class MainWindow(QMainWindow):
         mb = self.menuBar()
         m_file = mb.addMenu("ファイル(&F)")
         self.add_action(m_file, "設定…", self.open_settings, "Ctrl+,")
+        self.add_action(m_file, "録画フォルダを開く", self.open_record_dir)
         self.add_action(m_file, "一覧を読み込み直す", lambda: self.reload(force=True), "F5")
         m_file.addSeparator()
         self.add_action(m_file, "日本語名リストを読み込む…", self.import_names)
@@ -1037,6 +1220,7 @@ class MainWindow(QMainWindow):
 
         m_game = mb.addMenu("ゲーム(&G)")
         self.add_action(m_game, "遊ぶ", self.launch_selected, "Return")
+        self.add_action(m_game, "録画する／しない の切り替え", self.rec_chk.toggle, "Ctrl+R")
         self.add_action(m_game, "お気に入りに追加／外す", self.toggle_fav, "Ctrl+D")
         self.add_action(m_game, "日本語名を付ける…", self.rename_selected, "F2")
         self.add_action(m_game, "全画面表示の切り替え", self.toggle_fullscreen, "F11")
@@ -1327,9 +1511,22 @@ class MainWindow(QMainWindow):
             if r != QMessageBox.Yes:
                 return
 
+        args = self.build_args(name)
+        rec_file = None
+        if self.cfg.get("record"):
+            rec_file = f"arcade-tana-rec-{name}-{time.strftime('%Y%m%d-%H%M%S')}.avi"
+            args += ["-aviwrite", rec_file]
+            snap = Path(self.cfg["snap_dirs"][0]) if self.cfg["snap_dirs"] else Path.home()
+            try:
+                if shutil.disk_usage(snap if snap.exists() else Path.home()).free < 3 * 1024**3:
+                    self.statusBar().showMessage("⚠ ディスクの空きが少なめです（録画は 1 分で数百 MB 使います）", 8000)
+            except OSError:
+                pass
+
         proc = QProcess(self)
         proc.setProgram(self.cfg["mame_path"])
-        proc.setArguments(self.build_args(name))
+        proc.setArguments(args)
+        proc.setProperty("rec_file", rec_file or "")
         proc.setProcessChannelMode(QProcess.MergedChannels)
         proc.finished.connect(lambda code, _st, p=proc, n=name: self.on_finished(p, n, code))
         proc.errorOccurred.connect(lambda err, p=proc: self.on_proc_error(p, err))
@@ -1343,7 +1540,8 @@ class MainWindow(QMainWindow):
         h["last"] = int(time.time())
         save_config(self.cfg)
         self.model.refresh_row(name)
-        self.statusBar().showMessage(f"起動中：{self.model.display_name(name)}", 5000)
+        self.statusBar().showMessage(
+            f"{'● 録画しながら' if rec_file else ''}起動中：{self.model.display_name(name)}", 5000)
 
     def on_finished(self, proc: QProcess, name: str, code: int):
         out = bytes(proc.readAll()).decode("utf-8", errors="replace")
@@ -1356,6 +1554,15 @@ class MainWindow(QMainWindow):
             self.raise_()
             self.activateWindow()
         self.update_detail()          # F12 で撮った画像をすぐ反映
+        rec_file = proc.property("rec_file")
+        if rec_file:
+            avi = self.find_avi(rec_file)
+            if avi:
+                title = safe_filename(self.model.display_name(name))
+                mp4 = self.record_dir() / f"{title}_{time.strftime('%Y%m%d-%H%M%S')}.mp4"
+                self.recorder.add(avi, mp4)
+            elif code == 0:
+                self.statusBar().showMessage("録画ファイルが見つかりませんでした", 8000)
         if code != 0:
             box = QMessageBox(self)
             box.setIcon(QMessageBox.Warning)
@@ -1373,6 +1580,37 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, APP_NAME,
                                 f"MAME を起動できませんでした：{self.cfg['mame_path']}\n"
                                 "「ファイル → 設定」で MAME の場所を確認してください。")
+
+    # ── 録画 ──
+    def on_rec_toggled(self, on: bool):
+        self.cfg["record"] = on
+        self.rec_chk.setStyleSheet("color: #d32f2f; font-weight: bold;" if on else "")
+        save_config(self.cfg)
+
+    def record_dir(self) -> Path:
+        return Path(self.cfg.get("record_dir") or default_record_dir())
+
+    def open_record_dir(self):
+        d = self.record_dir()
+        d.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(d)))
+
+    def find_avi(self, fname: str) -> Path | None:
+        cands = [Path(d) / fname for d in self.cfg["snap_dirs"][:1]]
+        cands += [Path.home() / ".mame" / "snap" / fname, Path.cwd() / fname,
+                  Path.cwd() / "snap" / fname]
+        for c in cands:
+            if c.is_file() and c.stat().st_size > 0:
+                return c
+        return None
+
+    def on_rec_done(self, path: str):
+        self.rec_label.setText("")
+        self.statusBar().showMessage(f"録画を保存しました：{Path(path).name}（ファイル → 録画フォルダを開く）", 15000)
+
+    def on_rec_failed(self, msg: str):
+        self.rec_label.setText("")
+        QMessageBox.warning(self, APP_NAME, msg)
 
     # ── ゲームパッド ──
     def on_pad(self, act: str):
@@ -1477,6 +1715,10 @@ class MainWindow(QMainWindow):
             "　（セット名.png、またはセット名のフォルダの中の画像を表示します）。\n\n"
             "■ お気に入り\n"
             "　ゲームを選んで Ctrl+D。表示を「お気に入り」にすると、それだけ出ます。\n\n"
+            "■ 録画\n"
+            "　上の「● 録画する」をオン（Ctrl+R）にして遊ぶと、遊んだ内容を録画します。\n"
+            "　ゲームを終えると自動で MP4 に変換し、「ビデオ/アーケード棚」に保存します\n"
+            "　（ffmpeg が必要。保存先・画質は設定で変えられます）。\n\n"
             "■ ゲームパッドで操作（pygame が必要）\n"
             "　十字キー・左スティック：上下で選ぶ　左右・LB/RB：10 本ずつ移動\n"
             "　A・START：遊ぶ　Y：お気に入り　X：表示の切り替え\n"
@@ -1501,6 +1743,14 @@ class MainWindow(QMainWindow):
             "ライセンス：MIT"))
 
     def closeEvent(self, e):
+        if self.recorder.busy():
+            r = QMessageBox.question(
+                self, APP_NAME,
+                "録画を MP4 に変換している途中です。\n今終了すると、変換前の AVI ファイルのまま録画フォルダに残します。\n\n終了しますか？")
+            if r != QMessageBox.Yes:
+                e.ignore()
+                return
+            self.recorder.abort_all()
         self.cfg["header_state"] = bytes(self.table.horizontalHeader().saveState().toBase64()).decode()
         self.cfg["splitter_state"] = bytes(self.splitter.saveState().toBase64()).decode()
         save_config(self.cfg)
